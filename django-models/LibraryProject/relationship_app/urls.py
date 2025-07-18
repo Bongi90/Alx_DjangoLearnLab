@@ -14,5 +14,5 @@ urlpatterns = [
 
     path('login/', auth_views.LoginView.as_view(template_name='relationship_app/login.html'), name='login'),
 
-    path('logout/', auth_views.LogoutView.as_view(template_name='relationship_app/logged_out.html', next_page='relationship_app:list_books'), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(template_name='relationship_app/logout.html', next_page='relationship_app:list_books'), name='logout'),
 ]
