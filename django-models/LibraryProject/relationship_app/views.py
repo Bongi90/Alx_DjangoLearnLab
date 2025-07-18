@@ -6,7 +6,7 @@ def list_books(request):
     """
     Retrieves all books from the database and renders them in a list_books.html template.
     """
-    books = Book.objects.all().order_by('title') 
+    books = Book.objects.all().order_by('title')
     context = {
         'books': books
     }
@@ -28,6 +28,3 @@ class LibraryDetailView(DetailView):
         """
         context = super().get_context_data(**kwargs)
         return context
-
-
-
