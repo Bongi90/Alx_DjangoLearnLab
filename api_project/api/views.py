@@ -1,12 +1,15 @@
+# api/views.py
+
 from rest_framework import viewsets
-from .models import Book
-from .serializers import BookSerializer
-from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from .models import MyModel
+from .serializers import MyModelSerializer
 
-class BookList(generics.ListAPIView):
-    queryset = Book.objects.all()
-    serializer_class = BookSerializer
-
-class BookViewSet(viewsets.ModelViewSet):
-    queryset = Book.objects.all()
-    serializer_class = BookSerializer
+class MyModelViewSet(viewsets.ModelViewSet):
+    """
+    A viewset that provides default `create()`, `retrieve()`, `update()`,
+    `partial_update()`, `destroy()` and `list()` actions.
+    """
+    queryset = MyModel.objects.all()
+    serializer_class = MyModelSerializer
+    permission_classes = [IsAuthenticated] 
