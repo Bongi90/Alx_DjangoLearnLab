@@ -18,7 +18,6 @@ class BookSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("publication_year cannot be in the future.")
         return value
 
-
 class NestedBookSerializer(serializers.ModelSerializer):
     """
     Nested representation of Book used under AuthorSerializer.
@@ -29,15 +28,12 @@ class NestedBookSerializer(serializers.ModelSerializer):
         model = Book
         fields = ['id', 'title', 'publication_year']
 
-
 class AuthorSerializer(serializers.ModelSerializer):
     """
     Serializer for Author model that includes nested books.
 
     - 'books' is a nested list using NestedBookSerializer.
-    - Supports writable nested create and update:
-        - On create, nested books (if provided) are validated using BookSerializer and then created.
-        - On update, if 'books' is provided it will replace the Author's books (simple strategy).
+    - Supports writable nested create and update.
     """
     books = NestedBookSerializer(many=True, required=False)
 
@@ -49,9 +45,8 @@ class AuthorSerializer(serializers.ModelSerializer):
         books_data = validated_data.pop('books', [])
         author = Author.objects.create(**validated_data)
 
-        # Validate each nested book with the full BookSerializer (so validation rules apply)
+        # Validate each nested book with the full BookSerializer
         for book_data in books_data:
-            # attach author id so BookSerializer can resolve relation and perform validation
             payload = {**book_data, 'author': author.id}
             book_serializer = BookSerializer(data=payload)
             book_serializer.is_valid(raise_exception=True)
@@ -65,7 +60,7 @@ class AuthorSerializer(serializers.ModelSerializer):
         instance.save()
 
         if books_data is not None:
-            # Replace existing books with provided list (simple strategy).
+            # Replace existing books with the new list
             instance.books.all().delete()
             for book_data in books_data:
                 payload = {**book_data, 'author': instance.id}

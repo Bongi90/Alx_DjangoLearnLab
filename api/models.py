@@ -14,7 +14,6 @@ class Author(models.Model):
     def __str__(self):
         return self.name
 
-
 class Book(models.Model):
     """
     Represents a book.
@@ -31,4 +30,3 @@ class Book(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.publication_year})"
-
