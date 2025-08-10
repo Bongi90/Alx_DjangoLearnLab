@@ -10,4 +10,3 @@ urlpatterns = [
     path('books/', BookListCreateAPIView.as_view(), name='books-list'),
     path('books/<int:pk>/', BookRetrieveUpdateDestroyAPIView.as_view(), name='books-detail'),
 ]
-
