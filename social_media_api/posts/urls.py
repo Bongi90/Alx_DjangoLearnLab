@@ -1,17 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework_nested import routers
 from .views import PostViewSet, CommentViewSet, FeedView
 
 router = DefaultRouter()
-router.register(r'', PostViewSet, basename='posts')
-
-posts_router = routers.NestedSimpleRouter(router, r'', lookup='post')
-posts_router.register(r'comments', CommentViewSet, basename='post-comments')
+router.register(r"posts", PostViewSet, basename="post")
+router.register(r"comments", CommentViewSet, basename="comment")
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('', include(posts_router.urls)),
-    path('feed/', FeedView.as_view(), name='feed'),
-
+    path("", include(router.urls)),
+    path("feed/", FeedView.as_view(), name="feed"),
 ]

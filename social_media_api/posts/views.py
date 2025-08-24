@@ -1,42 +1,47 @@
-from rest_framework import viewsets, filters, generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, permissions, filters, generics
+from rest_framework.response import Response
+from django.db.models import Q
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
-from .permissions import IsAuthorOrReadOnly
-
+from .permissions import IsOwnerOrReadOnly
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all().order_by('-created_at')
+    queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'content']
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["title", "content"]
+    ordering_fields = ["created_at", "updated_at", "title"]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["content"]
+    ordering_fields = ["created_at", "updated_at"]
 
     def get_queryset(self):
-        return Comment.objects.filter(post_id=self.kwargs['post_pk']).order_by('-created_at')
+        qs = Comment.objects.select_related("post", "author").all()
+        post_id = self.request.query_params.get("post")
+        if post_id:
+            qs = qs.filter(post_id=post_id)
+        return qs
 
     def perform_create(self, serializer):
-        post = Post.objects.get(pk=self.kwargs['post_pk'])
-        serializer.save(author=self.request.user, post=post)
-        
+        serializer.save(author=self.request.user)
 
 class FeedView(generics.ListAPIView):
-    queryset = Post.objects.all()
-    permission_classes = [IsAuthenticated]
-    serializer_class = PostSerializer
 
-    def get_queryset(self):
-        following_users = self.request.user.following.all()
+        serializer_class = PostSerializer
+        permission_classes = [permissions.IsAuthenticated]
 
-        queryset = Post.objects.filter(author__in=following_users).order_by('-created_at')
+        def get_queryset(self):
+            user = self.request.user
+            following_ids = user.following.values_list("id", flat=True)
+            return Post.objects.filter(Q(author__in=following_ids) | Q(author=user)).order_by("-created_at")
 
-        return queryset
+        def list(self, request, *args, **kwargs):
+            return super().list(request, *args, **kwargs)
