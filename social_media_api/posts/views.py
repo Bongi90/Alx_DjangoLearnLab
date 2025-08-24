@@ -3,7 +3,6 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from .permissions import IsAuthorOrReadOnly
-from rest_framework import generics
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -16,8 +15,9 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()  # Add this line
+    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
 
@@ -27,15 +27,16 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         post = Post.objects.get(pk=self.kwargs['post_pk'])
         serializer.save(author=self.request.user, post=post)
+        
+
 class FeedView(generics.ListAPIView):
+    queryset = Post.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = PostSerializer
 
     def get_queryset(self):
-        # Get the list of user IDs that the current user is following
         following_users = self.request.user.following.all()
 
-        # Retrieve posts from those users, ordered by creation date
         queryset = Post.objects.filter(author__in=following_users).order_by('-created_at')
 
         return queryset
